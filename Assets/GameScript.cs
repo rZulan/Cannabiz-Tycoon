@@ -13,13 +13,9 @@ public class GameScript : MonoBehaviour
     public Sprite plant4;
     public Sprite plant5;
     public Image progress;
-    int _amount;
-    int _sellPrice;
-    int _playerMoney = 0;
     public TextMeshProUGUI amount;
     public TextMeshProUGUI sellPrice;
     public TextMeshProUGUI playerMoney;
-
 
     public void OnPlantCLick()
     {
@@ -44,22 +40,22 @@ public class GameScript : MonoBehaviour
             image.sprite = plant1;
             progress.rectTransform.localScale = new Vector3((float)0, 1);
 
-            _amount++;
-            _sellPrice = _amount * 10;
-            amount.text = _amount.ToString() + "g";
-            sellPrice.text = "$ " + _sellPrice.ToString();
+            PlayerPrefs.SetInt("amount", PlayerPrefs.GetInt("amount") + 1);;
+            PlayerPrefs.SetInt("amount", PlayerPrefs.GetInt("amount"));
+            PlayerPrefs.SetInt("sellPrice", PlayerPrefs.GetInt("amount") * 10);
+            amount.text = PlayerPrefs.GetInt("amount").ToString() + "g";
+            sellPrice.text = "$ " + PlayerPrefs.GetInt("sellPrice").ToString();
         }
     }
 
     public void OnSellClick()
     {
-        _playerMoney += _sellPrice;
+        PlayerPrefs.SetInt("playerMoney", PlayerPrefs.GetInt("playerMoney") + PlayerPrefs.GetInt("sellPrice"));
+        PlayerPrefs.SetInt("amount", 0);
+        PlayerPrefs.SetInt("sellPrice", 0);
 
-        _amount = 0;
-        _sellPrice = 0;
-
-        playerMoney.text = "$ " + _playerMoney.ToString();
-        amount.text = _amount.ToString() + "g";
-        sellPrice.text = "$" + _sellPrice.ToString();
+        playerMoney.text = "$ " + PlayerPrefs.GetInt("playerMoney").ToString();
+        amount.text = PlayerPrefs.GetInt("amount").ToString() + "g";
+        sellPrice.text = "$" + PlayerPrefs.GetInt("sellPrice").ToString();
     }
 }
