@@ -1,3 +1,4 @@
+using Mono.Cecil;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -7,55 +8,85 @@ using UnityEngine.UI;
 public class GameScript : MonoBehaviour
 {
     public Image image;
-    public Sprite plant1;
-    public Sprite plant2;
-    public Sprite plant3;
-    public Sprite plant4;
-    public Sprite plant5;
+    public Sprite[] plant = new Sprite[5];
     public Image progress;
     public TextMeshProUGUI amount;
     public TextMeshProUGUI sellPrice;
     public TextMeshProUGUI playerMoney;
 
+    bool growing = false;
+    private void Start()
+    {
+        plant[0] = Resources.Load<Sprite>("Pot2");
+        plant[1] = Resources.Load<Sprite>("Pot3");
+        plant[2] = Resources.Load<Sprite>("Pot4");
+        plant[3] = Resources.Load<Sprite>("Pot5");
+        plant[4] = Resources.Load<Sprite>("Pot6");
+    }
+
     public void OnPlantCLick()
     {
-        if (image.sprite == plant1)
+        if(!growing)
         {
-            image.sprite = plant2;
-            progress.rectTransform.localScale = new Vector3((float)0.25, 1);
-        } else if(image.sprite == plant2)
+            StartCoroutine(GrowPlant());
+        } else
         {
-            image.sprite = plant3;
-            progress.rectTransform.localScale = new Vector3((float)0.50, 1);
-        } else if (image.sprite == plant3)
-        {
-            image.sprite = plant4;
-            progress.rectTransform.localScale = new Vector3((float)0.75, 1);
-        } else if (image.sprite == plant4)
-        {
-            image.sprite = plant5;
-            progress.rectTransform.localScale = new Vector3((float)1.00, 1);
-        } else if (image.sprite == plant5)
-        {
-            image.sprite = plant1;
-            progress.rectTransform.localScale = new Vector3((float)0, 1);
+            Debug.Log("Plant is still growing!");
+        }
+    }
 
-            PlayerPrefs.SetInt("amount", PlayerPrefs.GetInt("amount") + 1);;
-            PlayerPrefs.SetInt("amount", PlayerPrefs.GetInt("amount"));
-            PlayerPrefs.SetInt("sellPrice", PlayerPrefs.GetInt("amount") * 10);
-            amount.text = PlayerPrefs.GetInt("amount").ToString() + "g";
-            sellPrice.text = "$ " + PlayerPrefs.GetInt("sellPrice").ToString();
+    IEnumerator GrowPlant()
+    {
+        growing = true;
+        image.sprite = plant[0];
+
+        image.sprite = plant[1];
+        progress.rectTransform.localScale = new Vector3((float)0.25, 1);
+
+        while (growing)
+        {
+            Debug.Log("Growing...");
+            yield return new WaitForSeconds(1f);
+
+            if (image.sprite == plant[1])
+            {
+                image.sprite = plant[2];
+                progress.rectTransform.localScale = new Vector3((float)0.50, 1);
+            }
+            else if (image.sprite == plant[2])
+            {
+                image.sprite = plant[3];
+                progress.rectTransform.localScale = new Vector3((float)0.75, 1);
+            }
+            else if (image.sprite == plant[3])
+            {
+                image.sprite = plant[4];
+                progress.rectTransform.localScale = new Vector3((float)1.00, 1);
+            }
+            else if (image.sprite == plant[4])
+            {
+                image.sprite = plant[0];
+                progress.rectTransform.localScale = new Vector3((float)0, 1);
+
+                PlantScript.HarvestAmount++;
+                PlantScript.SellPrice = PlantScript.HarvestAmount * 10;
+                amount.text = PlantScript.HarvestAmount.ToString() + "g";
+                sellPrice.text = "$ " + PlantScript.SellPrice.ToString();
+
+                Debug.Log("Fully Grown!");
+                growing = false;
+            }
         }
     }
 
     public void OnSellClick()
     {
-        PlayerPrefs.SetInt("playerMoney", PlayerPrefs.GetInt("playerMoney") + PlayerPrefs.GetInt("sellPrice"));
-        PlayerPrefs.SetInt("amount", 0);
-        PlayerPrefs.SetInt("sellPrice", 0);
+        PlayerScript.Money += PlantScript.SellPrice;
+        PlantScript.HarvestAmount = 0;
+        PlantScript.SellPrice = 0;
 
-        playerMoney.text = "$ " + PlayerPrefs.GetInt("playerMoney").ToString();
-        amount.text = PlayerPrefs.GetInt("amount").ToString() + "g";
-        sellPrice.text = "$" + PlayerPrefs.GetInt("sellPrice").ToString();
+        playerMoney.text = "$ " + PlayerScript.Money.ToString();
+        amount.text = PlantScript.HarvestAmount.ToString() + "g";
+        sellPrice.text = "$" + PlantScript.SellPrice.ToString();
     }
 }
