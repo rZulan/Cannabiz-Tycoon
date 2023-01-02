@@ -10,20 +10,26 @@ public class GameScript : MonoBehaviour
     public Image image;
     public Sprite[] plant = new Sprite[5];
     public Image progress;
-    public TextMeshProUGUI amount;
-    public TextMeshProUGUI sellPrice;
-    public TextMeshProUGUI sellPricePerGram;
-    public TextMeshProUGUI playerMoney;
-
-    public TextMeshProUGUI supplyText;
-    public TextMeshProUGUI demandText;
-    public TextMeshProUGUI moreDemandText;
+    public Image demandProgress;
+    public Image tipClickHere;
 
     public int supply;
     public int demand;
+    public double rate;
     public double basePrice;
-    public double pricePerGram;
+    public double currentPrice;
+    public double sellPrice;
+    public double totalPrice;
     public int moreDemandTimer;
+
+    public TextMeshProUGUI Text_PlayerMoney;
+    public TextMeshProUGUI Text_Supply;
+    public TextMeshProUGUI Text_Demand;
+    public TextMeshProUGUI Text_Rate;
+    public TextMeshProUGUI Text_BasePrice;
+    public TextMeshProUGUI Text_CurrentPrice;
+    public TextMeshProUGUI Text_TotalPrice;
+    public TextMeshProUGUI Text_MoreDemandTimer;
 
     bool growing = false;
     private void Start()
@@ -35,48 +41,47 @@ public class GameScript : MonoBehaviour
         plant[4] = Resources.Load<Sprite>("Pot6");
 
         supply = 0;
-        demand = 10;
-        basePrice = 10;
+        demand = 15;
+        rate = 1;
+        basePrice = 6;
+        currentPrice = 0;
+        totalPrice = 0;
         moreDemandTimer = 180;
-
-        supplyText.text = "Supply: " + supply.ToString();
-        demandText.text = "Demand: " + demand.ToString();
 
         StartCoroutine(MoreDemand());
     }
 
     private void Update()
     {
-        supplyText.text = "Supply: " + supply.ToString();
-        demandText.text = "Demand: " + demand.ToString();
-        moreDemandText.text = "More Demand in: " + moreDemandTimer.ToString() + "s";
+        Text_PlayerMoney.text = "$" + PlayerScript.Money.ToString("f2");
+        Text_Supply.text = supply.ToString() + "g";
+        Text_Demand.text = demand.ToString() + "g";
+        Text_Rate.text = (rate * 100).ToString("f2") + "%";
+        Text_BasePrice.text = "$" + basePrice.ToString("f2") + " / g";
+        Text_CurrentPrice.text = "$" + currentPrice.ToString("f2") + " / g";
+        Text_TotalPrice.text = "$" + totalPrice.ToString("f2");
+        Text_MoreDemandTimer.text = moreDemandTimer.ToString() + "s";
 
-        playerMoney.text = "$ " + PlayerScript.Money.ToString();
-        amount.text = PlantScript.HarvestAmount.ToString() + "g";
-        sellPrice.text = "$" + PlantScript.SellPrice.ToString();
+        rate = currentPrice / basePrice;
 
         if (demand > supply)
         {
-            pricePerGram = basePrice + ((demand - supply) * (basePrice * 0.05));
-            
+            currentPrice = basePrice + ((demand - supply) * (basePrice * 0.05));
         }
         else if (demand == supply)
         {
-            pricePerGram = basePrice;
+            currentPrice = basePrice;
         }
         else
         {
-            pricePerGram = basePrice - ((supply - demand) * (basePrice * 0.05));
+            currentPrice = basePrice - ((supply - demand) * (basePrice * 0.05));
         }
-
-        sellPricePerGram.text = "($" + pricePerGram.ToString() + " / g)";
     }
 
     IEnumerator MoreDemand()
     {
         while(true)
         {
-            yield return new WaitForSeconds(1f);
 
             moreDemandTimer--;
 
@@ -85,6 +90,8 @@ public class GameScript : MonoBehaviour
                 moreDemandTimer = 180;
                 demand += 10;
             }
+
+            yield return new WaitForSeconds(1f);
         }
         
     }
@@ -93,6 +100,7 @@ public class GameScript : MonoBehaviour
     {
         if(!growing)
         {
+            tipClickHere.enabled= false;
             StartCoroutine(GrowPlant());
         } else
         {
@@ -110,6 +118,7 @@ public class GameScript : MonoBehaviour
 
         while (growing)
         {
+
             yield return new WaitForSeconds(1f);
 
             if (image.sprite == plant[1])
@@ -132,17 +141,15 @@ public class GameScript : MonoBehaviour
                 image.sprite = plant[0];
                 progress.rectTransform.localScale = new Vector3((float)0, 1);
 
-                PlantScript.HarvestAmount++;
-
                 if(demand > supply)
                 {
-                    PlantScript.SellPrice += basePrice + ((demand - supply) * (basePrice * 0.05));
+                    totalPrice += basePrice + ((demand - supply) * (basePrice * 0.05));
                 } else if(demand == supply)
                 {
-                    PlantScript.SellPrice += basePrice;
+                    totalPrice += basePrice;
                 } else
                 {
-                    PlantScript.SellPrice += basePrice - ((supply - demand) * (basePrice * 0.05));
+                    totalPrice += basePrice - ((supply - demand) * (basePrice * 0.05));
                 }
 
                 demand--;
@@ -157,9 +164,8 @@ public class GameScript : MonoBehaviour
     {
         if(!growing)
         {
-            PlayerScript.Money += PlantScript.SellPrice;
-            PlantScript.HarvestAmount = 0;
-            PlantScript.SellPrice = 0;
+            PlayerScript.Money += totalPrice;
+            totalPrice = 0;
 
             supply = 0;
         }
