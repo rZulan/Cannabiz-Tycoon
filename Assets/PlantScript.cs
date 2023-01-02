@@ -4,6 +4,6 @@ using UnityEngine;
 
 public class PlantScript : MonoBehaviour
 {
-    public static int SellPrice;
+    public static double SellPrice;
     public static int HarvestAmount;
 }

@@ -4,5 +4,5 @@ using UnityEngine;
 
 public class PlayerScript : MonoBehaviour
 {
-    public static int Money;
+    public static double Money;
 }
